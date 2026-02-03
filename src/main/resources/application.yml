@@ -1,0 +1,31 @@
+plc:
+  s7:
+    enable: true
+    connections:
+      plc1:
+        enable: true
+        ip: 192.168.0.51
+        port: 102
+        rack: 0
+        slot: 1
+        pduLength: 240
+      plc2:
+        enable: true
+        ip: 192.168.0.30
+        port: 102
+        rack: 0
+        slot: 1
+        pduLength: 240
+
+  opcua:
+    enable: false
+    connections:
+      plc3:
+        enable: true
+        ip: 192.168.0.32
+        dd: true
+      plc4:
+        enable: true
+        ip: 192.168.0.33
+        dd: true
+

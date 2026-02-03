@@ -1,0 +1,27 @@
+package com.yunyoucloud.plc4x.config;
+
+import com.yunyoucloud.plc4x.common.enums.PlcProtocol;
+import com.yunyoucloud.plc4x.config.connection.S7ConnectionConfig;
+import lombok.Data;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
+
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "plc.s7")
+@ConditionalOnProperty(prefix = "plc.s7", name = "enable", havingValue = "true")
+public class S7PlcConfig implements IPlcConfig {
+	
+	private boolean enable = false;
+	
+	private Map<String, S7ConnectionConfig> connections;
+	
+	@Override
+	public PlcProtocol protocol() {
+		return PlcProtocol.S7;
+	}
+}
+
