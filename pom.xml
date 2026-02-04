@@ -42,13 +42,13 @@
 		<dependency>
 			<groupId>org.apache.plc4x</groupId>
 			<artifactId>plc4j-transport-tcp</artifactId>
-			<version>0.13.1</version>
+			<version>${plc4x.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.apache.plc4x</groupId>
 			<artifactId>plc4j-driver-opcua</artifactId>
-			<version>0.13.1</version>
+			<version>${plc4x.version}</version>
 		</dependency>
 		
 		<dependency>
@@ -57,19 +57,30 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
+			<groupId>com.yunyoucloud</groupId>
+			<artifactId>plc4x-spring-boot-starter-api</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 	
-<!--	<build>-->
-<!--		<finalName>${project.artifactId}</finalName>-->
-<!--		<plugins>-->
-<!--			<plugin>-->
-<!--				<groupId>org.springframework.boot</groupId>-->
-<!--				<artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--			</plugin>-->
-<!--		</plugins>-->
-<!--	</build>-->
+	<distributionManagement>
+		<!-- 正式版本仓库 -->
+		<repository>
+			<id>yunyou-nexus</id>
+			<name>Yunyou Nexus Central</name>
+			<url>http://maven.yunyoucloud.local/repository/maven-releases/</url>
+		</repository>
+	
+	</distributionManagement>
+	
+	<!--	<build>-->
+	<!--		<finalName>${project.artifactId}</finalName>-->
+	<!--		<plugins>-->
+	<!--			<plugin>-->
+	<!--				<groupId>org.springframework.boot</groupId>-->
+	<!--				<artifactId>spring-boot-maven-plugin</artifactId>-->
+	<!--			</plugin>-->
+	<!--		</plugins>-->
+	<!--	</build>-->
 
 </project>

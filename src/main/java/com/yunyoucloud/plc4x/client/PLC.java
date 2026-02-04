@@ -1,9 +1,9 @@
 package com.yunyoucloud.plc4x.client;
 
-import com.yunyoucloud.plc4x.common.PlcParseData;
-import com.yunyoucloud.plc4x.common.RequestItem;
-import com.yunyoucloud.plc4x.common.ResponseItem;
-import com.yunyoucloud.plc4x.common.enums.PlcProtocol;
+import com.yunyoucloud.plc4x.core.PlcParseData;
+import com.yunyoucloud.plc4x.core.RequestItem;
+import com.yunyoucloud.plc4x.core.ResponseItem;
+import com.yunyoucloud.plc4x.core.enums.PlcProtocol;
 import com.yunyoucloud.plc4x.exception.PlcReadExpection;
 import com.yunyoucloud.plc4x.exception.PlcWriteExpection;
 import lombok.Getter;

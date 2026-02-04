@@ -1,4 +1,4 @@
-package com.yunyoucloud.plc4x.common.annotations;
+package com.yunyoucloud.plc4x.core.annotations;
 
 
 import java.lang.annotation.Documented;

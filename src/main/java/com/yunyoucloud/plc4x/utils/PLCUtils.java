@@ -1,8 +1,8 @@
 package com.yunyoucloud.plc4x.utils;
 
 import com.yunyoucloud.plc4x.client.PLC;
-import com.yunyoucloud.plc4x.common.annotations.DbMultiMode;
-import com.yunyoucloud.plc4x.common.annotations.PlcVariable;
+import com.yunyoucloud.plc4x.core.annotations.DbMultiMode;
+import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
 import com.yunyoucloud.plc4x.exception.PlcCommExpection;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;

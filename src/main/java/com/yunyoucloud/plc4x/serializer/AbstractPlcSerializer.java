@@ -1,8 +1,8 @@
 package com.yunyoucloud.plc4x.serializer;
 
 import com.yunyoucloud.plc4x.client.PLC;
-import com.yunyoucloud.plc4x.common.PlcParseData;
-import com.yunyoucloud.plc4x.common.annotations.PlcVariable;
+import com.yunyoucloud.plc4x.core.PlcParseData;
+import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
 import com.yunyoucloud.plc4x.utils.PLCUtils;
 import lombok.SneakyThrows;
 

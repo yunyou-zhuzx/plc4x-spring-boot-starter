@@ -1,4 +1,4 @@
-package com.yunyoucloud.plc4x.common.enums;
+package com.yunyoucloud.plc4x.core.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

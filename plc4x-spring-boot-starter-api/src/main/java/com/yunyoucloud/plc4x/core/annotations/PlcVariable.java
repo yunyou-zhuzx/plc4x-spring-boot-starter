@@ -1,7 +1,7 @@
-package com.yunyoucloud.plc4x.common.annotations;
+package com.yunyoucloud.plc4x.core.annotations;
 
-import com.yunyoucloud.plc4x.common.enums.EDataType;
-import com.yunyoucloud.plc4x.common.enums.PlcDisplayType;
+import com.yunyoucloud.plc4x.core.enums.EDataType;
+import com.yunyoucloud.plc4x.core.enums.PlcDisplayType;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

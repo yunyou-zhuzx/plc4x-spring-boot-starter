@@ -1,1 +1,3 @@
+com.yunyoucloud.plc4x.config.S7PlcConfig
+com.yunyoucloud.plc4x.config.OpcuaPlcConfig
 com.yunyoucloud.plc4x.config.PlcConfig

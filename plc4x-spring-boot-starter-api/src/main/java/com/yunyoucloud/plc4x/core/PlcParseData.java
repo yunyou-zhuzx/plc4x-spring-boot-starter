@@ -1,6 +1,6 @@
-package com.yunyoucloud.plc4x.common;
+package com.yunyoucloud.plc4x.core;
 
-import com.yunyoucloud.plc4x.common.enums.EDataType;
+import com.yunyoucloud.plc4x.core.enums.EDataType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

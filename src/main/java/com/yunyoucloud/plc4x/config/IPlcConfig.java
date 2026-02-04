@@ -1,6 +1,6 @@
 package com.yunyoucloud.plc4x.config;
 
-import com.yunyoucloud.plc4x.common.enums.PlcProtocol;
+import com.yunyoucloud.plc4x.core.enums.PlcProtocol;
 import com.yunyoucloud.plc4x.config.connection.ConnectionConfig;
 
 import java.util.Map;

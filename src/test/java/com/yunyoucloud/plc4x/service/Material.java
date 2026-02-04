@@ -1,7 +1,7 @@
 package com.yunyoucloud.plc4x.service;
 
-import com.yunyoucloud.plc4x.common.annotations.PlcVariable;
-import com.yunyoucloud.plc4x.common.enums.EDataType;
+import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
+import com.yunyoucloud.plc4x.core.enums.EDataType;
 import lombok.Data;
 
 @Data

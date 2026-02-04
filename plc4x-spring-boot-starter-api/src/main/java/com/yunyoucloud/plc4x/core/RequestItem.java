@@ -1,4 +1,4 @@
-package com.yunyoucloud.plc4x.common;
+package com.yunyoucloud.plc4x.core;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
