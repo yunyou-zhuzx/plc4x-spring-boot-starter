@@ -10,6 +10,7 @@ public enum PlcProtocol {
 	//
 	S7("s7"),
 	OPCUA("opcua"),
+	MODBUS_TCP("modbus-tcp"),
 	;
 	
 	private final String protocol;

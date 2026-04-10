@@ -3,9 +3,9 @@ package com.yunyoucloud.plc4x.serializer;
 import com.yunyoucloud.plc4x.client.PLC;
 import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
 
-public class OpcuaSerializable extends AbstractPlcSerializer {
+public class ModbusTcpSerializable extends AbstractPlcSerializer {
 	
-	public OpcuaSerializable(final PLC plc) {
+	public ModbusTcpSerializable(final PLC plc) {
 		super(plc);
 	}
 	
@@ -14,7 +14,7 @@ public class OpcuaSerializable extends AbstractPlcSerializer {
 		return dbAddress + plcVariable.address();
 	}
 	
-	public static OpcuaSerializable newInstance(final PLC plc) {
-		return new OpcuaSerializable(plc);
+	public static ModbusTcpSerializable newInstance(final PLC plc) {
+		return new ModbusTcpSerializable(plc);
 	}
 }

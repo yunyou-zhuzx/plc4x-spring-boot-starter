@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -137,6 +138,13 @@ public class PLC {
 	
 	@SneakyThrows
 	public void read(final List<PlcParseData> plcParseDataList) {
+		if (!this.plcConnection.isConnected()) {
+			this.plcConnection.connect();
+		}
+		if (!plcConnection.getMetadata().isReadSupported()) {
+			log.error("This connection doesn't support reading.");
+			return;
+		}
 		final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
 		
 		final Map<String, PlcParseData> plcParseDataMap = new HashMap<>(8);
@@ -147,14 +155,14 @@ public class PLC {
 		}
 		
 		final PlcReadRequest plcReadRequest = requestBuilder.build();
-		final PlcReadResponse plcReadResponse = plcReadRequest.execute().get();
+		final PlcReadResponse plcReadResponse = plcReadRequest.execute().get(10, TimeUnit.SECONDS);
 		
 		for (String tagName : plcReadResponse.getTagNames()) {
 			final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
 			final PlcParseData plcParseData = plcParseDataMap.get(tagName);
 			if (responseCode == PlcResponseCode.OK) {
 				final RequestItem requestItem = plcParseData.getRequestItem();
-				final Object value = resolvePlcValue(requestItem.getAddress(), plcReadResponse, plcParseData.getDataType().getClazz());
+				final Object value = resolvePlcValue(requestItem.getTagName(), plcReadResponse, plcParseData.getDataType().getClazz());
 				plcParseData.getResponseItem().setValue(value);
 			} else {
 				log.error("读取PLC数据失败：tagName = {}, reason = {}", tagName, responseCode.name());

@@ -19,6 +19,8 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 		this.plc = plc;
 	}
 	
+	public abstract String resolveAddress(String dbAddress, PlcVariable plcVariable);
+	
 	@Override
 	public <T> T read(final Class<T> db) {
 		return read(db, null);
@@ -74,7 +76,7 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 		plcParseData.setField(field);
 		plcParseData.setDataType(plcVariable.type());
 		plcParseData.getRequestItem().setTagName(field.getName());
-		plcParseData.getRequestItem().setAddress(dbAddress + plcVariable.address());
+		plcParseData.getRequestItem().setAddress(resolveAddress(dbAddress, plcVariable));
 		return List.of(plcParseData);
 	}
 	

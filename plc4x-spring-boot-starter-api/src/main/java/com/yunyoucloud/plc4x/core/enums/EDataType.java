@@ -1,5 +1,6 @@
 package com.yunyoucloud.plc4x.core.enums;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
@@ -9,31 +10,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 @RequiredArgsConstructor
 public enum EDataType {
 	//
-	BOOL("bool", 1, Boolean.class),
-	BYTE("byte", 1, Byte.class),
-	UINT16("uint16", 2, Short.class),
-	INT16("int16", 2, Short.class),
-	UINT32("uint32", 4, Integer.class),
-	INT32("int32", 4, Integer.class),
-	INT64("int64", 8, Long.class),
-	FLOAT32("float32", 4, Float.class),
-	FLOAT64("float64", 8, Double.class),
-	STRING("string", 1, String.class),
-	TIME("time", 4, Long.class),
-	DATE("date", 2, LocalDate.class),
-	TIME_OF_DAY("timeOfDay", 4, LocalTime.class),
-	DTL("dtl", 12, LocalDateTime.class),
-	OBJECT("object", 1, Object.class),
-	LIST("list", 1, List.class),
-	AUTO("auto", 1, Object.class);
+	BOOL("bool", 1, Boolean.class, "BOOL"),
+	BYTE("byte", 1, Byte.class, "BYTE"),
+	UINT16("uint16", 2, Short.class, "UINT"),
+	INT16("int16", 2, Short.class, "INT"),
+	UINT32("uint32", 4, Integer.class, "UDINT"),
+	INT32("int32", 4, Integer.class, "DINT"),
+	INT64("int64", 8, Long.class, "LINT"),
+	FLOAT32("float32", 4, Float.class, "REAL"),
+	FLOAT64("float64", 8, Double.class, "LREAL"),
+	STRING("string", 1, String.class, "STRING"),
+	TIME("time", 4, Long.class, "TIME"),
+	DATE("date", 2, LocalDate.class, "DATE"),
+	TIME_OF_DAY("timeOfDay", 4, LocalTime.class, "TIME_OF_DAY"),
+	DTL("dtl", 12, LocalDateTime.class, "BOOL"),
+	OBJECT("object", 1, Object.class, "BOOL"),
+	LIST("list", 1, List.class, "BOOL"),
+	AUTO("auto", 1, Object.class, "BOOL");
 	
 	private static Map<String, EDataType> map;
-	private final int byteLength;
 	private final String name;
+	private final int byteLength;
 	private final Class<?> clazz;
+	private final String code;
 	
 	public static EDataType from(String data) {
 		if (map == null) {
@@ -45,12 +48,6 @@ public enum EDataType {
 		}
 		
 		return (EDataType) map.get(data);
-	}
-	
-	private EDataType(String name, int byteLength, Class<?> clazz) {
-		this.name = name;
-		this.byteLength = byteLength;
-		this.clazz = clazz;
 	}
 	
 	public int getByteLength() {

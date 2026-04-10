@@ -47,6 +47,7 @@ public interface IPLCSerializable {
 		return switch (plc.getPlcProtocol()) {
 			case OPCUA -> new OpcuaSerializable(plc);
 			case S7 -> new S7Serializable(plc);
+			case MODBUS_TCP ->  new ModbusTcpSerializable(plc);
 			default -> throw new PlcCommExpection("不支持的协议");
 		};
 	}

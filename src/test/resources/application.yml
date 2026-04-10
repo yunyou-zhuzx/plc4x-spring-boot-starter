@@ -1,0 +1,44 @@
+plc:
+  s7:
+    enable: false
+    connections:
+      # 料库的 PLC 地址
+      plc1:
+        enable: true
+        ip: 192.168.11.73
+        port: 102
+        rack: 0
+        slot: 1
+        pduLength: 240
+      # 板材出库（激光上料）小车的 PLC 地址
+      plc2:
+        enable: true
+        ip: 192.168.11.81
+        port: 102
+        rack: 0
+        slot: 1
+        pduLength: 240
+      # 管材出库（切管上料）小车的 PLC 地址
+      plc3:
+        enable: false
+        ip: 192.168.11.78
+        port: 102
+        rack: 0
+        slot: 1
+        pduLength: 240
+
+  opcua:
+    enable: false
+    connections:
+      plc4:
+        enable: true
+        ip: 192.168.0.32
+
+  modbus:
+    enable: true
+    connections:
+      plc1:
+        enable: true
+        ip: 127.0.0.1
+        port: 502
+        slave: 2

@@ -10,7 +10,8 @@ import java.util.Objects;
 public class PlcManager {
 	
 	public static PLC getPlc(final ConnectionConfig connectionConfig) {
-		try (PlcConnection plcConnection = new DefaultPlcDriverManager().getConnection(connectionConfig.address())) {
+		try {
+			PlcConnection plcConnection = new DefaultPlcDriverManager().getConnection(connectionConfig.address());
 			return new PLC(plcConnection, connectionConfig.protocol());
 		} catch (Exception e) {
 			throw new PlcCommExpection(e.getMessage());

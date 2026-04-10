@@ -1,4 +1,4 @@
-package com.yunyoucloud.plc4x.service;
+package com.yunyoucloud.plc4x.service.opcua;
 
 import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
 import com.yunyoucloud.plc4x.core.enums.EDataType;
