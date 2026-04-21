@@ -10,7 +10,7 @@ public class OpcuaConnectionConfig implements ConnectionConfig {
 	
 	private String ip = "192.168.1.10";
 	
-	private String dd = "";
+	private Integer port = 4840;
 	
 	@Override
 	public boolean enable() {
@@ -19,7 +19,7 @@ public class OpcuaConnectionConfig implements ConnectionConfig {
 	
 	@Override
 	public String address() {
-		return "opcua:tcp://" + ip;
+		return "opcua:tcp://" + ip +":" + port;
 	}
 	
 	@Override

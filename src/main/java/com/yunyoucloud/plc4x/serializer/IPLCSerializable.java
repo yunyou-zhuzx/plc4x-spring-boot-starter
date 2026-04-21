@@ -22,6 +22,22 @@ public interface IPLCSerializable {
 	 */
 	<T> T read(Class<T> db, Integer index);
 	
+	boolean readBoolean(String address);
+	
+	byte readByte(String address);
+	
+	short readShort(String address);
+	
+	int readInteger(String address);
+	
+	long readLong(String address);
+	
+	float readFloat(String address);
+	
+	double readDouble(String address);
+	
+	String readString(String address);
+	
 	/**
 	 * 写入数据
 	 *
@@ -37,6 +53,22 @@ public interface IPLCSerializable {
 	 */
 	<T> void write(T db, Integer index);
 	
+	void writeBoolean(String address, boolean value);
+	
+	void writeByte(String address, byte value);
+	
+	void writeShort(String address, short value);
+	
+	void writeInteger(String address, int value);
+	
+	void writeLong(String address, long value);
+	
+	void writeFloat(String address, float value);
+	
+	void writeDouble(String address, double value);
+	
+	void writeString(String address, String value);
+	
 	/**
 	 * 创建PLC序列化器
 	 *
@@ -47,7 +79,7 @@ public interface IPLCSerializable {
 		return switch (plc.getPlcProtocol()) {
 			case OPCUA -> new OpcuaSerializable(plc);
 			case S7 -> new S7Serializable(plc);
-			case MODBUS_TCP ->  new ModbusTcpSerializable(plc);
+			case MODBUS_TCP -> new ModbusTcpSerializable(plc);
 			default -> throw new PlcCommExpection("不支持的协议");
 		};
 	}

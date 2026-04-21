@@ -3,6 +3,7 @@ package com.yunyoucloud.plc4x.serializer;
 import com.yunyoucloud.plc4x.client.PLC;
 import com.yunyoucloud.plc4x.core.PlcParseData;
 import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
+import com.yunyoucloud.plc4x.core.enums.EDataType;
 import com.yunyoucloud.plc4x.utils.PLCUtils;
 import lombok.SneakyThrows;
 
@@ -13,13 +14,32 @@ import java.util.Objects;
 
 public abstract class AbstractPlcSerializer implements IPLCSerializable {
 	
-	private final PLC plc;
+	protected final PLC plc;
 	
 	public AbstractPlcSerializer(final PLC plc) {
 		this.plc = plc;
 	}
 	
-	public abstract String resolveAddress(String dbAddress, PlcVariable plcVariable);
+	/**
+	 * 解析不通协议的地址
+	 *
+	 * @param dbAddress 多模式下使用，统一的DB块，但是IP不通
+	 * @param address   具体的IP地址
+	 * @param dataType  地址类型
+	 * @return plc4j 的可识别地址
+	 */
+	public abstract String resolveAddress(String dbAddress, String address, EDataType dataType);
+	
+	/**
+	 * 解析不通协议的地址
+	 *
+	 * @param dbAddress   多模式下使用，统一的DB块，但是IP不通
+	 * @param plcVariable 变量注解
+	 * @return plc4j 的可识别地址
+	 */
+	public String resolveAddress(String dbAddress, PlcVariable plcVariable) {
+		return resolveAddress(dbAddress, plcVariable.address(), plcVariable.type());
+	}
 	
 	@Override
 	public <T> T read(final Class<T> db) {

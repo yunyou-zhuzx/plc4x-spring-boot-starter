@@ -49,16 +49,4 @@ public enum EDataType {
 		
 		return (EDataType) map.get(data);
 	}
-	
-	public int getByteLength() {
-		return this.byteLength;
-	}
-	
-	public String getName() {
-		return this.name;
-	}
-	
-	public Class<?> getClazz() {
-		return this.clazz;
-	}
 }

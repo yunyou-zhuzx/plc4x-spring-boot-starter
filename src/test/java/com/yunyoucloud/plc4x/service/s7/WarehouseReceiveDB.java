@@ -47,7 +47,7 @@ public class WarehouseReceiveDB {
 		displayConfig = "0-待机,1-运行,2-故障,3-暂停"
 	)
 	private Short status;
-
+	
 	/**
 	 * PLC 异常代码
 	 */
@@ -59,7 +59,7 @@ public class WarehouseReceiveDB {
 		displayType = PlcDisplayType.STR
 	)
 	private String errorCode;
-
+	
 	/**
 	 * 模式 0-单机模式；1-联机模式
 	 */
@@ -71,7 +71,7 @@ public class WarehouseReceiveDB {
 		displayConfig = "0-单机模式,1-联机模式"
 	)
 	private Short mode;
-
+	
 	/**
 	 * 堆垛机是否有物料 0-无载；1-有载
 	 */
@@ -83,7 +83,7 @@ public class WarehouseReceiveDB {
 		displayConfig = "0-无载,1-有载"
 	)
 	private Short hasMaterial;
-
+	
 	/**
 	 * 堆垛机当前位置列
 	 */
@@ -94,7 +94,7 @@ public class WarehouseReceiveDB {
 		displayType = PlcDisplayType.STR
 	)
 	private Short positionColumn;
-
+	
 	/**
 	 * 堆垛机当前位置列
 	 */
@@ -105,7 +105,7 @@ public class WarehouseReceiveDB {
 		displayType = PlcDisplayType.STR
 	)
 	private Short positionLayer;
-
+	
 	/**
 	 * 目标平台
 	 */
@@ -116,7 +116,7 @@ public class WarehouseReceiveDB {
 		displayType = PlcDisplayType.STR
 	)
 	private Short platform;
-
+	
 	/**
 	 * 任务状态 0-空闲；1-执行中；2-完成；3-异常
 	 */
@@ -128,8 +128,8 @@ public class WarehouseReceiveDB {
 		displayConfig = "0-空闲,1-执行中,2-完成,3-异常"
 	)
 	private Short taskStatus;
-
-
+	
+	
 	/**
 	 * 任务编号
 	 */
@@ -141,7 +141,7 @@ public class WarehouseReceiveDB {
 		displayType = PlcDisplayType.STR
 	)
 	private String taskCode;
-
+	
 	/**
 	 * 堆垛机取放货完成: 0-未完成；1-完成
 	 */
@@ -151,9 +151,9 @@ public class WarehouseReceiveDB {
 		needDisplay = false
 	)
 	private Short finish;
-
+	
 	public static final String TASK_STATUS_FIELD_NAME = "finish";
-
+	
 	/**
 	 * X轴坐标
 	 */
@@ -163,7 +163,7 @@ public class WarehouseReceiveDB {
 		needDisplay = false
 	)
 	private Float x;
-
+	
 	/**
 	 * Z轴坐标
 	 */
@@ -173,7 +173,7 @@ public class WarehouseReceiveDB {
 		needDisplay = false
 	)
 	private Float z;
-
+	
 	/**
 	 * Y轴坐标
 	 */
@@ -183,9 +183,8 @@ public class WarehouseReceiveDB {
 		needDisplay = false
 	)
 	private Float y;
-
-//	public static WarehouseReceiveDB resetTaskStatus() {
-//		return new WarehouseReceiveDB().setIsAllWrite(false).setTaskStatus((short) 0);
-//	}
-
+	
+	public static WarehouseReceiveDB resetTaskStatus() {
+		return new WarehouseReceiveDB().setIsAllWrite(false).setTaskStatus((short) 0);
+	}
 }

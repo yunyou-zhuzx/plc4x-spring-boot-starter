@@ -118,10 +118,10 @@ public class PLC {
 		final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
 		requestBuilder.addTagAddress(tagName, address);
 		final PlcReadRequest plcReadRequest = requestBuilder.build();
-		final PlcReadResponse plcReadResponse = plcReadRequest.execute().get();
+		final PlcReadResponse plcReadResponse = plcReadRequest.execute().get(10, TimeUnit.SECONDS);
 		final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
 		if (responseCode == PlcResponseCode.OK) {
-			return resolvePlcValue(address, plcReadResponse, returnClass);
+			return resolvePlcValue(tagName, plcReadResponse, returnClass);
 		}
 		throw new PlcReadExpection(String.format("tagName = %s, reason = %s", tagName, responseCode.name()));
 	}
@@ -208,34 +208,34 @@ public class PLC {
 		}
 	}
 	
-	private <T> T resolvePlcValue(final String address, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {
+	private <T> T resolvePlcValue(final String tagName, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {
 		if (WRAPPER_TYPES.contains(returnClass)) {
 			if (returnClass == Boolean.class) {
-				return (T) plcReadResponse.getBoolean(address);
+				return (T) plcReadResponse.getBoolean(tagName);
 			}
 			if (returnClass == Byte.class) {
-				return (T) plcReadResponse.getByte(address);
+				return (T) plcReadResponse.getByte(tagName);
 			}
 			if (returnClass == Character.class) {
-				return (T) plcReadResponse.getByte(address);
+				return (T) plcReadResponse.getByte(tagName);
 			}
 			if (returnClass == Short.class) {
-				return (T) plcReadResponse.getShort(address);
+				return (T) plcReadResponse.getShort(tagName);
 			}
 			if (returnClass == Integer.class) {
-				return (T) plcReadResponse.getInteger(address);
+				return (T) plcReadResponse.getInteger(tagName);
 			}
 			if (returnClass == Long.class) {
-				return (T) plcReadResponse.getLong(address);
+				return (T) plcReadResponse.getLong(tagName);
 			}
 			if (returnClass == Float.class) {
-				return (T) plcReadResponse.getFloat(address);
+				return (T) plcReadResponse.getFloat(tagName);
 			}
 			if (returnClass == Double.class) {
-				return (T) plcReadResponse.getDouble(address);
+				return (T) plcReadResponse.getDouble(tagName);
 			}
 		}
-		return resolveCustomValue(address, plcReadResponse, returnClass);
+		return resolveCustomValue(tagName, plcReadResponse, returnClass);
 	}
 	
 	private <T> T resolveCustomValue(final String address, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {

@@ -1,11 +1,11 @@
 plc:
   s7:
-    enable: false
+    enable: true
     connections:
       # 料库的 PLC 地址
       plc1:
         enable: true
-        ip: 192.168.11.73
+        ip: 10.31.128.73
         port: 102
         rack: 0
         slot: 1
@@ -28,11 +28,12 @@ plc:
         pduLength: 240
 
   opcua:
-    enable: false
+    enable: true
     connections:
       plc4:
         enable: true
-        ip: 192.168.0.32
+        ip: 10.31.128.100
+        port: 4840
 
   modbus:
     enable: true
