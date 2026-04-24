@@ -3,10 +3,10 @@ package com.yunyoucloud.plc4x.client;
 import com.yunyoucloud.plc4x.core.PlcParseData;
 import com.yunyoucloud.plc4x.core.RequestItem;
 import com.yunyoucloud.plc4x.core.ResponseItem;
-import com.yunyoucloud.plc4x.core.enums.EDataType;
 import com.yunyoucloud.plc4x.core.enums.PlcProtocol;
 import com.yunyoucloud.plc4x.exception.PlcReadExpection;
 import com.yunyoucloud.plc4x.exception.PlcWriteExpection;
+import com.yunyoucloud.plc4x.resolve.PlcResolve;
 import com.yunyoucloud.plc4x.utils.ByteUtils;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -18,12 +18,10 @@ import org.apache.plc4x.java.api.messages.PlcWriteRequest;
 import org.apache.plc4x.java.api.messages.PlcWriteResponse;
 import org.apache.plc4x.java.api.types.PlcResponseCode;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -141,7 +139,7 @@ public class PLC {
 	}
 	
 	@SneakyThrows
-	public void read(final List<PlcParseData> plcParseDataList) {
+	public void read(final List<PlcParseData> plcParseDataList, final PlcResolve plcResolve) {
 		if (!this.plcConnection.isConnected()) {
 			this.plcConnection.connect();
 		}
@@ -166,7 +164,7 @@ public class PLC {
 			final PlcParseData plcParseData = plcParseDataMap.get(tagName);
 			if (responseCode == PlcResponseCode.OK) {
 				final RequestItem requestItem = plcParseData.getRequestItem();
-				final Object value = resolvePlcValue(requestItem.getTagName(), plcReadResponse, plcParseData);
+				final Object value = plcResolve.resolve(plcParseData, requestItem.getTagName(), plcReadResponse);
 				plcParseData.getResponseItem().setValue(value);
 			} else {
 				log.error("读取PLC数据失败：tagName = {}, reason = {}", tagName, responseCode.name());
@@ -212,97 +210,34 @@ public class PLC {
 		}
 	}
 	
-	private Object resolvePlcValue(final String tagName, final PlcReadResponse plcReadResponse, final PlcParseData plcParseData) {
-		if (plcParseData.isBit()) {
-			final Collection<Short> allShorts = plcReadResponse.getAllShorts(tagName);
-			if (allShorts.size() == 1) {
-				final Short i = allShorts.stream().findFirst().orElse((short) 0);
-				final int bitIntValue = ByteUtils.getBits(i.intValue(), plcParseData.getBits(), plcParseData.getBitMode().getByteOrder());
-				return plcParseData.getBitType().convert(bitIntValue);
-			}
-			
-			if (Objects.equals(plcParseData.getBitType(), EDataType.FLOAT32)) {
-				final List<Short> list = allShorts.stream().toList();
-				final int bitIntValue = ByteUtils.combineShortToInteger(list.get(0), list.get(1));
-				return plcParseData.getBitType().convert(bitIntValue);
-			}
-			
-			if (Objects.equals(plcParseData.getBitType(), EDataType.STRING)) {
-				StringBuilder res = new StringBuilder();
-				for (Short allShort : allShorts) {
-					final int bitIntValue = ByteUtils.getBits(allShort.intValue(), plcParseData.getBits(), plcParseData.getBitMode().getByteOrder());
-					res.append(ByteUtils.shortToString((short) bitIntValue));
-				}
-				return res.toString();
-			}
-		}
-		return resolvePlcValue(tagName, plcReadResponse, plcParseData.getDataType().getClazz());
-	}
-	
-	private <T> T resolvePlcValue(final String tagName, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {
+	public <T> T resolvePlcValue(final String tagName, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {
 		if (WRAPPER_TYPES.contains(returnClass)) {
 			if (returnClass == Boolean.class) {
-				final Collection<Boolean> allBooleans = plcReadResponse.getAllBooleans(tagName);
-				if (allBooleans.size() > 1) {
-					return resolveMultipartPlcValue(allBooleans, returnClass);
-				}
 				return (T) plcReadResponse.getBoolean(tagName);
 			}
 			if (returnClass == Byte.class) {
-				final Collection<Byte> allBytes = plcReadResponse.getAllBytes(tagName);
-				if (allBytes.size() > 1) {
-					return resolveMultipartPlcValue(allBytes, returnClass);
-				}
 				return (T) plcReadResponse.getByte(tagName);
 			}
 			if (returnClass == Character.class) {
-				final Collection<Byte> allBytes = plcReadResponse.getAllBytes(tagName);
-				if (allBytes.size() > 1) {
-					return resolveMultipartPlcValue(allBytes, returnClass);
-				}
 				return (T) plcReadResponse.getByte(tagName);
 			}
 			if (returnClass == Short.class) {
-				final Collection<Short> allShorts = plcReadResponse.getAllShorts(tagName);
-				if (allShorts.size() > 1) {
-					return resolveMultipartPlcValue(allShorts, returnClass);
-				}
 				return (T) plcReadResponse.getShort(tagName);
 			}
 			if (returnClass == Integer.class) {
-				final Collection<Integer> allIntegers = plcReadResponse.getAllIntegers(tagName);
-				if (allIntegers.size() > 1) {
-					return resolveMultipartPlcValue(allIntegers, returnClass);
-				}
 				return (T) plcReadResponse.getInteger(tagName);
 			}
 			if (returnClass == Long.class) {
-				final Collection<Long> allLongs = plcReadResponse.getAllLongs(tagName);
-				if (allLongs.size() > 1) {
-					return resolveMultipartPlcValue(allLongs, returnClass);
-				}
 				return (T) plcReadResponse.getLong(tagName);
 			}
 			if (returnClass == Float.class) {
-				final Collection<Float> allFloats = plcReadResponse.getAllFloats(tagName);
-				if (allFloats.size() > 1) {
-					return resolveMultipartPlcValue(allFloats, returnClass);
-				}
 				return (T) plcReadResponse.getFloat(tagName);
 			}
 			if (returnClass == Double.class) {
-				final Collection<Double> allDoubles = plcReadResponse.getAllDoubles(tagName);
-				if (allDoubles.size() > 1) {
-					return resolveMultipartPlcValue(allDoubles, returnClass);
-				}
 				return (T) plcReadResponse.getDouble(tagName);
 			}
 		}
 		return resolveCustomValue(tagName, plcReadResponse, returnClass);
-	}
-	
-	private <T> T resolveMultipartPlcValue(Collection<?> valueList, Class<T> returnClass) {
-		return (T) valueList.stream().findFirst().orElse(null);
 	}
 	
 	private <T> T resolveCustomValue(final String address, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {

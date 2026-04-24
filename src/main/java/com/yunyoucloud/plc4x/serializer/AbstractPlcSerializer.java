@@ -4,7 +4,7 @@ import com.yunyoucloud.plc4x.client.PLC;
 import com.yunyoucloud.plc4x.core.PlcParseData;
 import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
 import com.yunyoucloud.plc4x.core.enums.EDataType;
-import com.yunyoucloud.plc4x.utils.ByteUtils;
+import com.yunyoucloud.plc4x.resolve.PlcResolve;
 import com.yunyoucloud.plc4x.utils.PLCUtils;
 import lombok.SneakyThrows;
 
@@ -42,6 +42,23 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 		return resolveAddress(dbAddress, plcVariable.address(), plcVariable.type());
 	}
 	
+	/**
+	 * 解析位地址
+	 *
+	 * @param dbAddress 地址
+	 * @return 位地址
+	 */
+	public String resolveBits(String dbAddress) {
+		return "[16]";
+	}
+	
+	/**
+	 * 获取 plc 解析器
+	 *
+	 * @return plc 解析器
+	 */
+	public abstract PlcResolve getPlcResolve();
+	
 	@Override
 	public <T> T read(final Class<T> db) {
 		return read(db, null);
@@ -50,7 +67,7 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 	@Override
 	public <T> T read(final Class<T> db, final Integer index) {
 		final List<PlcParseData> plcParseData = parseBean(db, index);
-		this.plc.read(plcParseData);
+		this.plc.read(plcParseData, getPlcResolve());
 		return this.fillData(db, plcParseData);
 	}
 	
@@ -62,7 +79,7 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 	@Override
 	public <T> void write(T db, final Integer index) {
 		final List<PlcParseData> plcParseData = parseBean(db.getClass(), index);
-		extractField(db, plcParseData);
+		extractField(db, plcParseData, getPlcResolve());
 		this.plc.write(
 			plcParseData
 				.stream()
@@ -79,7 +96,6 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 				plcParseData.addAll(this.createPlcParseData(targetClass, plcVariable, field, index));
 			}
 		}
-		
 		return plcParseData;
 	}
 	
@@ -96,9 +112,7 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 		final PlcParseData plcParseData = new PlcParseData();
 		plcParseData.setField(field);
 		plcParseData.setBitMode(plcVariable.bitMode());
-		plcParseData.setBits(plcVariable.bit());
-		plcParseData.setBit(plcVariable.isBit());
-		plcParseData.setBitType(plcVariable.biteType());
+		plcParseData.setBits(resolveBits(plcVariable.address()));
 		plcParseData.setDataType(plcVariable.type());
 		plcParseData.setCount(plcVariable.count());
 		plcParseData.getRequestItem().setTagName(field.getName());
@@ -122,48 +136,17 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 	}
 	
 	@SneakyThrows
-	private <T> void extractField(T targetDb, List<PlcParseData> plcParseDataList) {
+	private <T> void extractField(T targetDb, List<PlcParseData> plcParseDataList, final PlcResolve plcResolve) {
 		for (PlcParseData plcParseDatum : plcParseDataList) {
-			extractField(targetDb, plcParseDatum);
+			extractField(targetDb, plcParseDatum, plcResolve);
 		}
 	}
 	
 	@SneakyThrows
-	private <T> void extractField(T targetDb, PlcParseData plcParseData) {
+	private <T> void extractField(T targetDb, PlcParseData plcParseData, final PlcResolve plcResolve) {
 		plcParseData.getField().setAccessible(true);
-		Object value = plcParseData.getField().get(targetDb);
-		if (plcParseData.isBit() && Objects.nonNull(value)) {
-			plcParseData.setBit(false);
-			plc.read(List.of(plcParseData));
-			plcParseData.setBit(true);
-			final Object newValue = plcParseData.getResponseItem().getValue();
-			if (newValue instanceof Short oldValue) {
-				int writeValue = 0;
-				if (value instanceof Boolean boolValue) {
-					writeValue = boolValue ? 1 : 0;
-				}
-				if (value instanceof String stringValue) {
-					final List<Short> shorts = ByteUtils.stringToShorts(stringValue);
-					if (shorts.size() < plcParseData.getCount()) {
-						for (int i = 0; i < plcParseData.getCount() - shorts.size(); i++) {
-							shorts.add((short) 0);
-						}
-					}
-					plcParseData.getResponseItem().setValue(shorts);
-					return;
-				}
-				if (value instanceof Number number) {
-					if (number instanceof Float) {
-						final int i = Float.floatToIntBits((Float) number);
-						plcParseData.getResponseItem().setValue(List.of(ByteUtils.getHighShort(i), ByteUtils.getLowShort(i)));
-						return;
-					} else {
-						writeValue = number.intValue();
-					}
-				}
-				value = ByteUtils.setBits(oldValue.intValue(), plcParseData.getBits(), writeValue);
-			}
-		}
+		final Object targetFiledValueDb = plcParseData.getField().get(targetDb);
+		Object value = plcResolve.extract(targetFiledValueDb, plcParseData);
 		plcParseData.getResponseItem().setValue(value);
 	}
 }

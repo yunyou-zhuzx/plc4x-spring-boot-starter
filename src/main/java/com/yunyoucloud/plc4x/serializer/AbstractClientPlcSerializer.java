@@ -1,13 +1,33 @@
 package com.yunyoucloud.plc4x.serializer;
 
 import com.yunyoucloud.plc4x.client.PLC;
+import com.yunyoucloud.plc4x.core.PlcParseData;
 import com.yunyoucloud.plc4x.core.enums.EDataType;
 import com.yunyoucloud.plc4x.exception.PlcCommExpection;
+import com.yunyoucloud.plc4x.resolve.PlcResolve;
+import lombok.SneakyThrows;
+import org.apache.plc4x.java.api.messages.PlcReadResponse;
 
 public abstract class AbstractClientPlcSerializer extends AbstractPlcSerializer {
 	
 	public AbstractClientPlcSerializer(final PLC plc) {
 		super(plc);
+	}
+	
+	@Override
+	public PlcResolve getPlcResolve() {
+		return new PlcResolve() {
+			@Override
+			public Object resolve(final PlcParseData plcParseData, final String tagName, final PlcReadResponse plcReadResponse) {
+				return plc.resolvePlcValue(tagName, plcReadResponse, plcParseData.getDataType().getClazz());
+			}
+			
+			@Override
+			@SneakyThrows
+			public Object extract(final Object targetFiledValueDb, final PlcParseData plcParseData) {
+				return targetFiledValueDb;
+			}
+		};
 	}
 	
 	@Override
@@ -101,7 +121,11 @@ public abstract class AbstractClientPlcSerializer extends AbstractPlcSerializer 
 		if (eDataType == null) {
 			throw new PlcCommExpection("类型不正确");
 		}
-		plc.write(resolveAddress("", address, eDataType), value);
+		final PlcParseData plcParseData = new PlcParseData();
+		plcParseData.setDataType(eDataType);
+		plcParseData.setBits(resolveBits(address));
+		plcParseData.getRequestItem().setAddress(address);
+		plc.write(resolveAddress("", address, eDataType), getPlcResolve().extract(value, plcParseData));
 	}
 	
 }
