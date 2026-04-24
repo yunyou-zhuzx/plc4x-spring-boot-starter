@@ -75,6 +75,38 @@ public class ModBusMaterial2 {
 	
 	@PlcVariable(
 		type = EDataType.BOOL,
+		address = "4x00019.7",
+		display = "加载程序执行成功",
+		displayType = PlcDisplayType.STR
+	)
+	private Boolean loadProcessSuccess;
+	
+	@PlcVariable(
+		type = EDataType.BOOL,
+		address = "4x00019.13",
+		display = "命令执行错误",
+		displayType = PlcDisplayType.STR
+	)
+	private Boolean commandExecuteError;
+	
+	@PlcVariable(
+		type = EDataType.BOOL,
+		address = "4x00019.10",
+		display = "命令执行错误",
+		displayType = PlcDisplayType.STR
+	)
+	private Boolean waitControl;
+	
+	@PlcVariable(
+		type = EDataType.BOOL,
+		address = "4x00019.11",
+		display = "命令执行错误",
+		displayType = PlcDisplayType.STR
+	)
+	private Boolean waitCommand;
+	
+	@PlcVariable(
+		type = EDataType.BOOL,
 		address = "4x00004.10",
 		display = "系统报警状态",
 		displayType = PlcDisplayType.STR

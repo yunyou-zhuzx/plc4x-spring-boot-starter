@@ -86,6 +86,10 @@ public class ModbusTcpSerializable extends AbstractClientPlcSerializer {
 			final short shortValue = readShort(plcParseData.getRequestItem().getAddress());
 			return ByteUtils.setBits(shortValue, plcParseData.getBits(), booleanValue ? 1 : 0);
 		}
+		if (fieldValue instanceof Short shortValue) {
+			final short oldShortValue = readShort(plcParseData.getRequestItem().getAddress());
+			return ByteUtils.setBits(oldShortValue, plcParseData.getBits(), shortValue);
+		}
 		return null;
 	}
 	

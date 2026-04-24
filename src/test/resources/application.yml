@@ -32,7 +32,7 @@ plc:
     connections:
       plc4:
         enable: true
-        ip: 10.31.128.100
+        ip: 10.31.128.115
         port: 4840
 
   modbus:

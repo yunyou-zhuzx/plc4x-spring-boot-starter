@@ -46,33 +46,12 @@ public @interface PlcVariable {
 	 */
 	int size() default 0;
 	
-//	/**
-//	 * bit 位
-//	 *
-//	 * @return bit 位
-//	 */
-//	String bit() default "[16]";
-
-//	/**
-//	 * 是否是 bit 位读取
-//	 *
-//	 * @return 是否是 bit 位
-//	 */
-//	boolean isBit() default false;
-	
 	/**
 	 * bit 位模式
 	 *
 	 * @return bit 位模式
 	 */
 	BitMode bitMode() default BitMode.LOW;
-	
-//	/**
-//	 * bit 位数据类型
-//	 *
-//	 * @return bit 位数据类型
-//	 */
-//	EDataType biteType() default EDataType.BYTE;
 	
 	/**
 	 * 是否需要显示

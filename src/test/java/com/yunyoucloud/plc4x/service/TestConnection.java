@@ -11,6 +11,8 @@ import com.yunyoucloud.plc4x.serializer.IPLCSerializable;
 import com.yunyoucloud.plc4x.serializer.OpcuaSerializable;
 import com.yunyoucloud.plc4x.service.modbus.ModBusMaterial2;
 import com.yunyoucloud.plc4x.service.opcua.Material;
+import com.yunyoucloud.plc4x.service.opcua.Material22;
+import lombok.SneakyThrows;
 import org.apache.plc4x.java.DefaultPlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
 import org.junit.jupiter.api.Test;
@@ -60,6 +62,36 @@ public class TestConnection {
 			});
 	}
 	
+	@SneakyThrows
+	private void sendControlCommand(final IPLCSerializable iplcSerializable, final String address) {
+		ModBusMaterial2 modBusMaterial2 = new ModBusMaterial2();
+		modBusMaterial2.setLock((short) 0);
+		iplcSerializable.write(modBusMaterial2);
+		TimeUnit.SECONDS.sleep(1);
+		
+		boolean isFinish = false;
+		final long l = System.currentTimeMillis();
+		while (!isFinish) {
+			final ModBusMaterial2 read22 = iplcSerializable.read(ModBusMaterial2.class);
+			if (read22.getWaitControl()) {
+				modBusMaterial2.setLock((short) 17);
+				iplcSerializable.write(modBusMaterial2);
+				TimeUnit.SECONDS.sleep(1);
+			}
+			if (read22.getWaitCommand()) {
+				iplcSerializable.writeBoolean(address, true);
+				isFinish = true;
+			}
+			if(isFinish) {
+				TimeUnit.SECONDS.sleep(1);
+				iplcSerializable.writeBoolean(address, false);
+			}
+			if (System.currentTimeMillis() - l > 5000) {
+				break;
+			}
+		}
+	}
+	
 	@Test
 	public void testConnectionModbusTcp() {
 		plcConfig.getPlcConfigs()
@@ -69,9 +101,24 @@ public class TestConnection {
 				final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
 				final ModBusMaterial2 read = iplcSerializable.read(ModBusMaterial2.class);
 				System.out.println(read);
+				
 				iplcSerializable.writeBoolean("4x00065.4", true);
+				iplcSerializable.writeBoolean("4x00065.5", true);
+				
+				ModBusMaterial2 modBusMaterial2 = new ModBusMaterial2();
+				modBusMaterial2.setWriteProcessFile("seut.namni");
+				iplcSerializable.write(modBusMaterial2);
+				sendControlCommand(iplcSerializable, "4x00052.7");
+				
+				ModBusMaterial2 modBusMaterial3 = new ModBusMaterial2();
+				modBusMaterial3.setForm(1.0f);
+				iplcSerializable.write(modBusMaterial3);
+				
+				sendControlCommand(iplcSerializable, "4x00052.2");
+				
 				final ModBusMaterial2 read2 = iplcSerializable.read(ModBusMaterial2.class);
 				System.out.println(read2);
+				
 //				final ModBusMaterial modBusMaterial = new ModBusMaterial();
 //				modBusMaterial.setLock((short)17);
 //				modBusMaterial.setDownloadTrayFinish(true);
@@ -104,7 +151,7 @@ public class TestConnection {
 			.forEach(opcuaPlcConfig -> {
 				final PLC plc = PlcManager.getPlc(opcuaPlcConfig.getConnections().get("plc4"));
 				final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
-				Material read = iplcSerializable.read(Material.class);
+				Material22 read = iplcSerializable.read(Material22.class);
 				System.out.println(read);
 			});
 	}
