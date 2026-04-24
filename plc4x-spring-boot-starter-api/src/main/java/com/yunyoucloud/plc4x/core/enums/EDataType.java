@@ -49,4 +49,32 @@ public enum EDataType {
 		
 		return (EDataType) map.get(data);
 	}
+	
+	public Object convert(Integer value) {
+		if (clazz == String.class) {
+			return String.valueOf(value);
+		}
+		if (clazz == Integer.class) {
+			return value;
+		}
+		if (clazz == Long.class) {
+			return Long.valueOf(value);
+		}
+		if (clazz == Double.class) {
+			return Double.longBitsToDouble(value);
+		}
+		if (clazz == Boolean.class) {
+			return value == 1;
+		}
+		if (clazz == Byte.class) {
+			return value.byteValue();
+		}
+		if (clazz == Short.class) {
+			return value.shortValue();
+		}
+		if (clazz == Float.class) {
+			return Float.intBitsToFloat(value);
+		}
+		return this.getClazz().cast(value);
+	}
 }

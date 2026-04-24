@@ -4,6 +4,7 @@ import com.yunyoucloud.plc4x.client.PLC;
 import com.yunyoucloud.plc4x.core.PlcParseData;
 import com.yunyoucloud.plc4x.core.annotations.PlcVariable;
 import com.yunyoucloud.plc4x.core.enums.EDataType;
+import com.yunyoucloud.plc4x.utils.ByteUtils;
 import com.yunyoucloud.plc4x.utils.PLCUtils;
 import lombok.SneakyThrows;
 
@@ -94,7 +95,12 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 		}
 		final PlcParseData plcParseData = new PlcParseData();
 		plcParseData.setField(field);
+		plcParseData.setBitMode(plcVariable.bitMode());
+		plcParseData.setBits(plcVariable.bit());
+		plcParseData.setBit(plcVariable.isBit());
+		plcParseData.setBitType(plcVariable.biteType());
 		plcParseData.setDataType(plcVariable.type());
+		plcParseData.setCount(plcVariable.count());
 		plcParseData.getRequestItem().setTagName(field.getName());
 		plcParseData.getRequestItem().setAddress(resolveAddress(dbAddress, plcVariable));
 		return List.of(plcParseData);
@@ -123,8 +129,41 @@ public abstract class AbstractPlcSerializer implements IPLCSerializable {
 	}
 	
 	@SneakyThrows
-	private <T> void extractField(T targetDb, PlcParseData plcParseDatum) {
-		plcParseDatum.getField().setAccessible(true);
-		plcParseDatum.getResponseItem().setValue(plcParseDatum.getField().get(targetDb));
+	private <T> void extractField(T targetDb, PlcParseData plcParseData) {
+		plcParseData.getField().setAccessible(true);
+		Object value = plcParseData.getField().get(targetDb);
+		if (plcParseData.isBit() && Objects.nonNull(value)) {
+			plcParseData.setBit(false);
+			plc.read(List.of(plcParseData));
+			plcParseData.setBit(true);
+			final Object newValue = plcParseData.getResponseItem().getValue();
+			if (newValue instanceof Short oldValue) {
+				int writeValue = 0;
+				if (value instanceof Boolean boolValue) {
+					writeValue = boolValue ? 1 : 0;
+				}
+				if (value instanceof String stringValue) {
+					final List<Short> shorts = ByteUtils.stringToShorts(stringValue);
+					if (shorts.size() < plcParseData.getCount()) {
+						for (int i = 0; i < plcParseData.getCount() - shorts.size(); i++) {
+							shorts.add((short) 0);
+						}
+					}
+					plcParseData.getResponseItem().setValue(shorts);
+					return;
+				}
+				if (value instanceof Number number) {
+					if (number instanceof Float) {
+						final int i = Float.floatToIntBits((Float) number);
+						plcParseData.getResponseItem().setValue(List.of(ByteUtils.getHighShort(i), ByteUtils.getLowShort(i)));
+						return;
+					} else {
+						writeValue = number.intValue();
+					}
+				}
+				value = ByteUtils.setBits(oldValue.intValue(), plcParseData.getBits(), writeValue);
+			}
+		}
+		plcParseData.getResponseItem().setValue(value);
 	}
 }

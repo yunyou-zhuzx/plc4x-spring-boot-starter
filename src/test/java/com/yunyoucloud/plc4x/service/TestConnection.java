@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.concurrent.TimeUnit;
+
 @SpringBootTest
 public class TestConnection {
 	
@@ -67,6 +69,28 @@ public class TestConnection {
 				final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
 				final ModBusMaterial read = iplcSerializable.read(ModBusMaterial.class);
 				System.out.println(read);
+				final ModBusMaterial modBusMaterial = new ModBusMaterial();
+				modBusMaterial.setLock((short)17);
+				modBusMaterial.setDownloadTrayFinish(true);
+				iplcSerializable.write(modBusMaterial);
+				modBusMaterial.setUploadTrayFinish(true);
+				modBusMaterial.setTaskId(2.0f);
+				modBusMaterial.setForm(1.0f);
+				modBusMaterial.setWriteProcessFile("seut.namni");
+				modBusMaterial.setLoad(true);
+				iplcSerializable.write(modBusMaterial);
+				final ModBusMaterial modBusMaterial2 = new ModBusMaterial();
+				modBusMaterial2.setStart(true);
+				iplcSerializable.write(modBusMaterial2);
+				final ModBusMaterial read2 = iplcSerializable.read(ModBusMaterial.class);
+				System.out.println(read2);
+			while (true){
+				try {
+					TimeUnit.SECONDS.sleep(1);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
 			});
 	}
 	
@@ -78,10 +102,6 @@ public class TestConnection {
 				final PLC plc = PlcManager.getPlc(opcuaPlcConfig.getConnections().get("plc4"));
 				final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
 				Material read = iplcSerializable.read(Material.class);
-				System.out.println(read);
-				read.setWanChengShuLiangQingLing(true);
-				iplcSerializable.write(read);
-				read = iplcSerializable.read(Material.class);
 				System.out.println(read);
 			});
 	}

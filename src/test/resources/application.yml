@@ -40,6 +40,6 @@ plc:
     connections:
       plc1:
         enable: true
-        ip: 127.0.0.1
+        ip: 10.31.128.110
         port: 502
-        slave: 2
+        slave: 1

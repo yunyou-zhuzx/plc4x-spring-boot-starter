@@ -1,5 +1,6 @@
 package com.yunyoucloud.plc4x.core;
 
+import com.yunyoucloud.plc4x.core.enums.BitMode;
 import com.yunyoucloud.plc4x.core.enums.EDataType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,6 +14,10 @@ public class PlcParseData {
 	private EDataType dataType;
 	private int count;
 	private Field field;
+	private boolean isBit;
+	private String bits;
+	private BitMode bitMode;
+	private EDataType bitType;
 	private RequestItem requestItem;
 	private ResponseItem responseItem;
 	
