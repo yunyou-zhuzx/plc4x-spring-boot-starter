@@ -22,20 +22,68 @@ public interface IPLCSerializable {
 	 */
 	<T> T read(Class<T> db, Integer index);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	boolean readBoolean(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	byte readByte(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	short readShort(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	int readInteger(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	long readLong(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	float readFloat(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	double readDouble(String address);
 	
+	/**
+	 * 读取数据
+	 *
+	 * @param address 地址
+	 * @return 数据
+	 */
 	String readString(String address);
 	
 	/**
@@ -53,20 +101,68 @@ public interface IPLCSerializable {
 	 */
 	<T> void write(T db, Integer index);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeBoolean(String address, boolean value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeByte(String address, byte value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeShort(String address, short value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeInteger(String address, int value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeLong(String address, long value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeFloat(String address, float value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeDouble(String address, double value);
 	
+	/**
+	 * 写入数据
+	 *
+	 * @param address 地址
+	 * @param value   值
+	 */
 	void writeString(String address, String value);
 	
 	/**

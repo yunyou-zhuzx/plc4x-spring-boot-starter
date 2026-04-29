@@ -116,7 +116,7 @@ public class PLC {
 	}
 	
 	@SneakyThrows
-	public <T> T read(final String tagName, final String address, final Class<T> returnClass) {
+	public synchronized <T> T read(final String tagName, final String address, final Class<T> returnClass) {
 		final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
 		requestBuilder.addTagAddress(tagName, address);
 		final PlcReadRequest plcReadRequest = requestBuilder.build();
@@ -139,7 +139,7 @@ public class PLC {
 	}
 	
 	@SneakyThrows
-	public void read(final List<PlcParseData> plcParseDataList, final PlcResolve plcResolve) {
+	public synchronized void read(final List<PlcParseData> plcParseDataList, final PlcResolve plcResolve) {
 		if (!this.plcConnection.isConnected()) {
 			this.plcConnection.connect();
 		}
@@ -178,7 +178,7 @@ public class PLC {
 	}
 	
 	@SneakyThrows
-	public <T> void write(final String tagName, final String address, final T value) {
+	public synchronized <T> void write(final String tagName, final String address, final T value) {
 		final PlcWriteRequest.Builder writeRequestBuilder = this.plcConnection.writeRequestBuilder();
 		writeRequestBuilder.addTagAddress(tagName, address, value);
 		final PlcWriteRequest plcWriteRequest = writeRequestBuilder.build();
@@ -190,7 +190,7 @@ public class PLC {
 	}
 	
 	@SneakyThrows
-	public void write(final List<PlcParseData> plcParseDataList) {
+	public synchronized void write(final List<PlcParseData> plcParseDataList) {
 		final PlcWriteRequest.Builder writeRequestBuilder = this.plcConnection.writeRequestBuilder();
 		
 		for (PlcParseData plcParseData : plcParseDataList) {
