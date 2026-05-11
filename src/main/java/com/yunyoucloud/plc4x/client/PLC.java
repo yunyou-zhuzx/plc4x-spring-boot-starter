@@ -1,5 +1,6 @@
 package com.yunyoucloud.plc4x.client;
 
+import com.yunyoucloud.plc4x.config.connection.ConnectionConfig;
 import com.yunyoucloud.plc4x.core.PlcParseData;
 import com.yunyoucloud.plc4x.core.RequestItem;
 import com.yunyoucloud.plc4x.core.ResponseItem;
@@ -11,7 +12,9 @@ import com.yunyoucloud.plc4x.utils.ByteUtils;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.plc4x.java.DefaultPlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
+import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
 import org.apache.plc4x.java.api.messages.PlcReadRequest;
 import org.apache.plc4x.java.api.messages.PlcReadResponse;
 import org.apache.plc4x.java.api.messages.PlcWriteRequest;
@@ -22,16 +25,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Getter
 @SuppressWarnings("unchecked")
 public class PLC {
 	
-	private final PlcConnection plcConnection;
+	private PlcConnection plcConnection;
 	private final PlcProtocol plcProtocol;
+	private final ConnectionConfig connectionConfig;
 	
 	// 定义需要判断的包装类型集合
 	private static final Set<Class<?>> WRAPPER_TYPES = new HashSet<>(Set.of(
@@ -39,12 +46,99 @@ public class PLC {
 		Long.class, Float.class, Double.class, Character.class
 	));
 	
-	public PLC(
-		final PlcConnection plcConnection,
-		final PlcProtocol plcProtocol
-	) {
-		this.plcConnection = plcConnection;
-		this.plcProtocol = plcProtocol;
+	@SneakyThrows
+	public PLC(final ConnectionConfig connectionConfig) {
+		this.connectionConfig = connectionConfig;
+		this.plcConnection = createNewConnection();
+		this.plcProtocol = connectionConfig.protocol();
+	}
+	
+	public boolean checkAndReconnectConnection() {
+		if (Objects.nonNull(this.plcConnection)) {
+			if (!this.plcConnection.isConnected()) {
+				try {
+					this.plcConnection.connect();
+				} catch (PlcConnectionException e) {
+					log.error("reconnect to plc error: {}", e.getMessage(), e);
+					return false;
+				}
+			} else {
+				return true;
+			}
+		}
+		
+		// 二次确认，还是未连接，销毁重新新建
+		if (Objects.nonNull(this.plcConnection) && this.plcConnection.isConnected()) {
+			return true;
+		}
+		
+		// 连接断开，尝试重连
+		destroyStaleConnection();
+		return reconnectWithRetry();
+	}
+	
+	/**
+	 * 重试重连机制
+	 */
+	public boolean reconnectWithRetry() {
+		final int maxRetries = 3;
+		final long retryDelayMs = 1000;
+		
+		for (int attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				this.plcConnection = createNewConnection();
+				if (Objects.nonNull(this.plcConnection) && this.plcConnection.isConnected()) {
+					log.info("PLC connection reestablished successfully (attempt {}/{})", attempt, maxRetries);
+					return true;
+				}
+				// 连接失败，销毁旧连接
+				else {
+					destroyStaleConnection();
+				}
+			} catch (Exception e) {
+				log.warn("PLC reconnection attempt {} failed: {}", attempt, e.getMessage());
+			}
+			
+			if (attempt < maxRetries) {
+				try {
+					Thread.sleep(retryDelayMs);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					break;
+				}
+			}
+		}
+		
+		log.error("Failed to reconnect to PLC after {} attempts", maxRetries);
+		return false;
+	}
+	
+	/**
+	 * 销毁旧的连接对象
+	 */
+	public void destroyStaleConnection() {
+		if (Objects.nonNull(this.plcConnection)) {
+			try {
+				if (this.plcConnection.isConnected()) {
+					this.plcConnection.close();
+				}
+			} catch (Exception e) {
+				log.warn("Error closing stale PLC connection: {}", e.getMessage(), e);
+			} finally {
+				this.plcConnection = null;
+			}
+		}
+	}
+	
+	/**
+	 * 创建新的连接
+	 */
+	public PlcConnection createNewConnection() throws PlcConnectionException {
+		try (PlcConnection plcConnection = new DefaultPlcDriverManager().getConnection(this.connectionConfig.address())) {
+			return plcConnection;
+		} catch (Exception e) {
+			throw new PlcConnectionException("Failed to create new plc connection" + e.getMessage(), e);
+		}
 	}
 	
 	public boolean readBoolean(String address) {
@@ -117,15 +211,32 @@ public class PLC {
 	
 	@SneakyThrows
 	public synchronized <T> T read(final String tagName, final String address, final Class<T> returnClass) {
-		final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
-		requestBuilder.addTagAddress(tagName, address);
-		final PlcReadRequest plcReadRequest = requestBuilder.build();
-		final PlcReadResponse plcReadResponse = plcReadRequest.execute().get(10, TimeUnit.SECONDS);
-		final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
-		if (responseCode == PlcResponseCode.OK) {
-			return resolvePlcValue(tagName, plcReadResponse, returnClass);
+		if (!checkAndReconnectConnection()) {
+			log.error("Unable to establish PLC connection, plc address: {}", connectionConfig.address());
+			throw new PlcConnectionException("Unable to establish PLC connection");
 		}
-		throw new PlcReadExpection(String.format("tagName = %s, reason = %s", tagName, responseCode.name()));
+		
+		if (!plcConnection.getMetadata().isReadSupported()) {
+			log.error("This connection doesn't support reading, plc address: {}", connectionConfig.address());
+			throw new PlcReadExpection("This connection doesn't support reading.");
+		}
+		
+		try {
+			final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
+			requestBuilder.addTagAddress(tagName, address);
+			final PlcReadRequest plcReadRequest = requestBuilder.build();
+			final PlcReadResponse plcReadResponse = plcReadRequest.execute().get(10, TimeUnit.SECONDS);
+			final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
+			if (responseCode == PlcResponseCode.OK) {
+				return resolvePlcValue(tagName, plcReadResponse, returnClass);
+			} else {
+				log.warn("read address {} failed, tagName = {}, reason = {}", address, tagName, responseCode.name());
+				return null;
+			}
+		} catch (TimeoutException e) {
+			destroyStaleConnection();
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public void read(final PlcParseData plcParseData) {
@@ -140,36 +251,44 @@ public class PLC {
 	
 	@SneakyThrows
 	public synchronized void read(final List<PlcParseData> plcParseDataList, final PlcResolve plcResolve) {
-		if (!this.plcConnection.isConnected()) {
-			this.plcConnection.connect();
+		if (!checkAndReconnectConnection()) {
+			log.error("Unable to establish PLC connection, plc address: {}", connectionConfig.address());
+			throw new PlcConnectionException("Unable to establish PLC connection");
 		}
+		
 		if (!plcConnection.getMetadata().isReadSupported()) {
-			log.error("This connection doesn't support reading.");
-			return;
-		}
-		final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
-		
-		final Map<String, PlcParseData> plcParseDataMap = new HashMap<>(8);
-		for (PlcParseData plcParseData : plcParseDataList) {
-			final RequestItem requestItem = plcParseData.getRequestItem();
-			plcParseDataMap.put(requestItem.getTagName(), plcParseData);
-			requestBuilder.addTagAddress(requestItem.getTagName(), requestItem.getAddress());
+			log.error("This connection doesn't support reading, plc address: {}", connectionConfig.address());
+			throw new PlcReadExpection("This connection doesn't support reading.");
 		}
 		
-		final PlcReadRequest plcReadRequest = requestBuilder.build();
-		final PlcReadResponse plcReadResponse = plcReadRequest.execute().get(10, TimeUnit.SECONDS);
-		
-		for (String tagName : plcReadResponse.getTagNames()) {
-			final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
-			final PlcParseData plcParseData = plcParseDataMap.get(tagName);
-			if (responseCode == PlcResponseCode.OK) {
+		try {
+			final PlcReadRequest.Builder requestBuilder = this.plcConnection.readRequestBuilder();
+			
+			final Map<String, PlcParseData> plcParseDataMap = new HashMap<>(8);
+			for (PlcParseData plcParseData : plcParseDataList) {
 				final RequestItem requestItem = plcParseData.getRequestItem();
-				final Object value = plcResolve.resolve(plcParseData, requestItem.getTagName(), plcReadResponse);
-				plcParseData.getResponseItem().setValue(value);
-			} else {
-				log.error("读取PLC数据失败：tagName = {}, reason = {}", tagName, responseCode.name());
-				plcParseData.getResponseItem().setValue(null);
+				plcParseDataMap.put(requestItem.getTagName(), plcParseData);
+				requestBuilder.addTagAddress(requestItem.getTagName(), requestItem.getAddress());
 			}
+			
+			final PlcReadRequest plcReadRequest = requestBuilder.build();
+			final PlcReadResponse plcReadResponse = plcReadRequest.execute().get(10, TimeUnit.SECONDS);
+			
+			for (String tagName : plcReadResponse.getTagNames()) {
+				final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
+				final PlcParseData plcParseData = plcParseDataMap.get(tagName);
+				if (responseCode == PlcResponseCode.OK) {
+					final RequestItem requestItem = plcParseData.getRequestItem();
+					final Object value = plcResolve.resolve(plcParseData, requestItem.getTagName(), plcReadResponse);
+					plcParseData.getResponseItem().setValue(value);
+				} else {
+					log.error("读取PLC数据失败：tagName = {}, reason = {}", tagName, responseCode.name());
+					plcParseData.getResponseItem().setValue(null);
+				}
+			}
+		} catch (TimeoutException e) {
+			destroyStaleConnection();
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -179,34 +298,65 @@ public class PLC {
 	
 	@SneakyThrows
 	public synchronized <T> void write(final String tagName, final String address, final T value) {
-		final PlcWriteRequest.Builder writeRequestBuilder = this.plcConnection.writeRequestBuilder();
-		writeRequestBuilder.addTagAddress(tagName, address, value);
-		final PlcWriteRequest plcWriteRequest = writeRequestBuilder.build();
-		final PlcWriteResponse plcReadResponse = plcWriteRequest.execute().get();
-		final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
-		if (responseCode != PlcResponseCode.OK) {
-			throw new PlcWriteExpection(String.format("tagName = %s, reason = %s", tagName, responseCode.name()));
+		if (!checkAndReconnectConnection()) {
+			log.error("Unable to establish PLC connection, plc address: {}", connectionConfig.address());
+			throw new PlcConnectionException("Unable to establish PLC connection");
+		}
+		
+		if (!plcConnection.getMetadata().isWriteSupported()) {
+			log.error("This connection doesn't support writing, plc address: {}", connectionConfig.address());
+			throw new PlcWriteExpection("This connection doesn't support writing.");
+		}
+		
+		try {
+			final PlcWriteRequest.Builder writeRequestBuilder = this.plcConnection.writeRequestBuilder();
+			writeRequestBuilder.addTagAddress(tagName, address, value);
+			final PlcWriteRequest plcWriteRequest = writeRequestBuilder.build();
+			final PlcWriteResponse plcReadResponse = plcWriteRequest.execute().get();
+			final PlcResponseCode responseCode = plcReadResponse.getResponseCode(tagName);
+			if (responseCode != PlcResponseCode.OK) {
+				log.warn("write address {} failed, tagName = {}, reason = {}", address, tagName, responseCode.name());
+				throw new PlcWriteExpection(String.format("tagName = %s, reason = %s", tagName, responseCode.name()));
+			}
+		} catch (ExecutionException | PlcWriteExpection e) {
+			destroyStaleConnection();
+			throw new RuntimeException(e);
 		}
 	}
 	
 	@SneakyThrows
 	public synchronized void write(final List<PlcParseData> plcParseDataList) {
-		final PlcWriteRequest.Builder writeRequestBuilder = this.plcConnection.writeRequestBuilder();
-		
-		for (PlcParseData plcParseData : plcParseDataList) {
-			final RequestItem requestItem = plcParseData.getRequestItem();
-			final ResponseItem responseItem = plcParseData.getResponseItem();
-			writeRequestBuilder.addTagAddress(requestItem.getTagName(), requestItem.getAddress(), responseItem.getValue());
+		if (!checkAndReconnectConnection()) {
+			log.error("Unable to establish PLC connection, plc address: {}", connectionConfig.address());
+			throw new PlcConnectionException("Unable to establish PLC connection");
 		}
 		
-		final PlcWriteRequest plcWriteRequest = writeRequestBuilder.build();
-		final PlcWriteResponse plcWriteResponse = plcWriteRequest.execute().get(10, TimeUnit.SECONDS);
+		if (!plcConnection.getMetadata().isWriteSupported()) {
+			log.error("This connection doesn't support writing, plc address: {}", connectionConfig.address());
+			throw new PlcWriteExpection("This connection doesn't support writing.");
+		}
 		
-		for (String tagName : plcWriteResponse.getTagNames()) {
-			final PlcResponseCode responseCode = plcWriteResponse.getResponseCode(tagName);
-			if (responseCode != PlcResponseCode.OK) {
-				log.error("写入PLC数据失败：tagName = {}, reason = {}", tagName, responseCode.name());
+		try {
+			final PlcWriteRequest.Builder writeRequestBuilder = this.plcConnection.writeRequestBuilder();
+			
+			for (PlcParseData plcParseData : plcParseDataList) {
+				final RequestItem requestItem = plcParseData.getRequestItem();
+				final ResponseItem responseItem = plcParseData.getResponseItem();
+				writeRequestBuilder.addTagAddress(requestItem.getTagName(), requestItem.getAddress(), responseItem.getValue());
 			}
+			
+			final PlcWriteRequest plcWriteRequest = writeRequestBuilder.build();
+			final PlcWriteResponse plcWriteResponse = plcWriteRequest.execute().get(10, TimeUnit.SECONDS);
+			
+			for (String tagName : plcWriteResponse.getTagNames()) {
+				final PlcResponseCode responseCode = plcWriteResponse.getResponseCode(tagName);
+				if (responseCode != PlcResponseCode.OK) {
+					log.error("写入PLC数据失败：tagName = {}, reason = {}", tagName, responseCode.name());
+				}
+			}
+		} catch (ExecutionException | PlcWriteExpection e) {
+			destroyStaleConnection();
+			throw new RuntimeException(e);
 		}
 	}
 	
