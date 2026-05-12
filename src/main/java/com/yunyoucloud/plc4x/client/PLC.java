@@ -39,6 +39,7 @@ public class PLC {
 	private PlcConnection plcConnection;
 	private final PlcProtocol plcProtocol;
 	private final ConnectionConfig connectionConfig;
+	private boolean isConnected = false;
 	
 	// 定义需要判断的包装类型集合
 	private static final Set<Class<?>> WRAPPER_TYPES = new HashSet<>(Set.of(
@@ -54,21 +55,21 @@ public class PLC {
 	}
 	
 	public boolean checkAndReconnectConnection() {
-		if (Objects.nonNull(this.plcConnection)) {
-			if (!this.plcConnection.isConnected()) {
-				try {
-					this.plcConnection.connect();
-				} catch (PlcConnectionException e) {
-					log.error("reconnect to plc error: {}", e.getMessage(), e);
-					return false;
-				}
-			} else {
-				return true;
-			}
-		}
+//		if (Objects.nonNull(this.plcConnection)) {
+//			if (!this.plcConnection.isConnected()) {
+//				try {
+//					this.plcConnection.connect();
+//				} catch (Exception e) {
+//					log.error("reconnect to plc error: {}", e.getMessage(), e);
+//					return false;
+//				}
+//			} else {
+//				return true;
+//			}
+//		}
 		
 		// 二次确认，还是未连接，销毁重新新建
-		if (Objects.nonNull(this.plcConnection) && this.plcConnection.isConnected()) {
+		if (Objects.nonNull(this.plcConnection) && this.isConnected) {
 			return true;
 		}
 		
@@ -87,7 +88,7 @@ public class PLC {
 		for (int attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				this.plcConnection = createNewConnection();
-				if (Objects.nonNull(this.plcConnection) && this.plcConnection.isConnected()) {
+				if (Objects.nonNull(this.plcConnection) && this.isConnected) {
 					log.info("PLC connection reestablished successfully (attempt {}/{})", attempt, maxRetries);
 					return true;
 				}
@@ -96,6 +97,7 @@ public class PLC {
 					destroyStaleConnection();
 				}
 			} catch (Exception e) {
+				this.isConnected = false;
 				log.warn("PLC reconnection attempt {} failed: {}", attempt, e.getMessage());
 			}
 			
@@ -119,12 +121,13 @@ public class PLC {
 	public void destroyStaleConnection() {
 		if (Objects.nonNull(this.plcConnection)) {
 			try {
-				if (this.plcConnection.isConnected()) {
+				if (this.isConnected) {
 					this.plcConnection.close();
 				}
 			} catch (Exception e) {
 				log.warn("Error closing stale PLC connection: {}", e.getMessage(), e);
 			} finally {
+				this.isConnected = false;
 				this.plcConnection = null;
 			}
 		}
@@ -134,9 +137,12 @@ public class PLC {
 	 * 创建新的连接
 	 */
 	public PlcConnection createNewConnection() throws PlcConnectionException {
-		try (PlcConnection plcConnection = new DefaultPlcDriverManager().getConnection(this.connectionConfig.address())) {
+		try {
+			PlcConnection plcConnection = new DefaultPlcDriverManager().getConnection(this.connectionConfig.address());
+			isConnected = true;
 			return plcConnection;
 		} catch (Exception e) {
+			isConnected = false;
 			throw new PlcConnectionException("Failed to create new plc connection" + e.getMessage(), e);
 		}
 	}
