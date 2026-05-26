@@ -396,7 +396,10 @@ public class PLC {
 		return resolveCustomValue(tagName, plcReadResponse, returnClass);
 	}
 	
-	private <T> T resolveCustomValue(final String address, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {
+	private <T> T resolveCustomValue(final String tagName, final PlcReadResponse plcReadResponse, final Class<T> returnClass) {
+		if (returnClass == String.class) {
+			return (T) plcReadResponse.getString(tagName);
+		}
 		return null;
 	}
 	
