@@ -41,10 +41,15 @@ Spring Boot Starter for Apache PLC4X - 工业 PLC 通信框架
 ```yaml
 plc:
   s7:
-    address: s7://192.168.1.100/0/1
-    connection-config:
-      username: admin
-      password: password
+    enable: true
+    connections:
+      plc1:
+        enable: true
+        ip: 192.168.10.73
+        port: 102
+        rack: 0
+        slot: 1
+        pduLength: 240
 ```
 
 #### Modbus TCP 配置
@@ -52,9 +57,13 @@ plc:
 ```yaml
 plc:
   modbus:
-    address: modbus-tcp://192.168.1.100:502
-    connection-config:
-      unit-id: 1
+    enable: true
+    connections:
+      plc1:
+        enable: true
+        ip: 10.31.128.110
+        port: 502
+        slave: 1
 ```
 
 #### OPC UA 配置
@@ -62,7 +71,12 @@ plc:
 ```yaml
 plc:
   opcua:
-    address: opcua:tcp://192.168.1.100:4840
+    enable: true
+    connections:
+      plc3:
+        enable: true
+        ip: 10.31.128.115
+        port: 4840
 ```
 
 ### 3. 启用 PLC 功能
@@ -85,33 +99,38 @@ public class MainApplication {
 
 ```java
 @Autowired
-private PlcManager plcManager;
+private PlcConfig plcConfig;
+
+final PLC plc =  PlcManager.getPlc(plcConfig.getPlcConfigs()[0].getConnections().get("plc1"));
+final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
 
 // 读取单个值
-boolean flag = plcManager.getPlc(PlcProtocol.S7).readBoolean("%M0.0");
-int counter = plcManager.getPlc(PlcProtocol.S7).readInteger("%DB1.DBD0");
-float temperature = plcManager.getPlc(PlcProtocol.S7).readFloat("%DB1.DBD4");
+boolean flag = iplcSerializable.readBoolean("M0.0");
+int counter =iplcSerializable.readInteger("DB1.12");
+float temperature = iplcSerializable.readFloat("DB1.12");
 
 // 批量读取
-List<PlcParseData> dataList = new ArrayList<>();
-// 添加读取项...
-plcManager.getPlc(PlcProtocol.S7).read(dataList, new PlcResolve());
+final WarehouseReceiveDB read = iplcSerializable.read(WarehouseReceiveDB.class);
 ```
 
 #### 写入数据
 
 ```java
 @Autowired
-private PlcManager plcManager;
+private PlcConfig plcConfig;
+
+final PLC plc =  PlcManager.getPlc(plcConfig.getPlcConfigs()[0].getConnections().get("plc1"));
+final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
+
 
 // 写入单个值
-plcManager.getPlc(PlcProtocol.S7).writeBoolean("%M0.0", true);
-plcManager.getPlc(PlcProtocol.S7).writeInteger("%DB1.DBD0", 100);
+iplcSerializable.writeBoolean("M0.0", true);
+iplcSerializable.writeInteger("DB1.DBD0", 100);
 
 // 批量写入
-List<PlcParseData> dataList = new ArrayList<>();
-// 添加写入项...
-plcManager.getPlc(PlcProtocol.S7).write(dataList);
+final WarehouseSendDB warehouseSendDB = new WarehouseSendDB();
+warehouseSendDB.setMaterialName("电箱柜");
+iplcSerializable.write(warehouseSendDB);
 ```
 
 ## 核心组件
@@ -133,18 +152,18 @@ plc4x-spring-boot-starter/
 │   │   ├── PLC.java                  # PLC 读写接口
 │   │   └── PlcManager.java           # 连接管理器
 │   ├── config/                       # 配置类
-│   │   ├── PlcConfig.java           # PLC 配置属性
-│   │   ├── S7PlcConfig.java         # S7 特定配置
-│   │   ├── ModbusPlcConfig.java     # Modbus 特定配置
-│   │   ├── OpcuaPlcConfig.java      # OPC UA 特定配置
-│   │   └── connection/              # 连接配置
+│   │   ├── PlcConfig.java            # PLC 配置属性
+│   │   ├── S7PlcConfig.java          # S7 特定配置
+│   │   ├── ModbusPlcConfig.java      # Modbus 特定配置
+│   │   ├── OpcuaPlcConfig.java       # OPC UA 特定配置
+│   │   └── connection/               # 连接配置
 │   ├── exception/                    # 异常定义
 │   │   ├── PlcReadExpection.java
 │   │   ├── PlcWriteExpection.java
 │   │   └── PlcCommExpection.java
 │   ├── serializer/                   # 序列化器
 │   └── utils/                        # 工具类
-└── plc4x-spring-boot-starter-api/   # API 模块
+plc4x-spring-boot-starter-api/        # API 模块
 ```
 
 ## 许可证
