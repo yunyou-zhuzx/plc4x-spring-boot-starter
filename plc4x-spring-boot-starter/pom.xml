@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.yunyoucloud</groupId>
+		<artifactId>plc4x-spring-boot</artifactId>
+		<version>1.0.0</version>
+	</parent>
+	
+	<artifactId>plc4x-spring-boot-starter</artifactId>
+	<packaging>jar</packaging>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.plc4x</groupId>
+			<artifactId>plc4j-api</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.plc4x</groupId>
+			<artifactId>plc4j-transport-tcp</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.plc4x</groupId>
+			<artifactId>plc4j-driver-opcua</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.plc4x</groupId>
+			<artifactId>plc4j-driver-s7</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.plc4x</groupId>
+			<artifactId>plc4j-driver-modbus</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-core</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.yunyoucloud</groupId>
+			<artifactId>plc4x-spring-boot-starter-api</artifactId>
+		</dependency>
+	</dependencies>
+	
+	<distributionManagement>
+		<!-- 正式版本仓库 -->
+		<repository>
+			<id>yunyou-nexus</id>
+			<name>Yunyou Nexus Central</name>
+			<url>http://maven.yunyoucloud.local/repository/maven-releases/</url>
+		</repository>
+	
+	</distributionManagement>
+	
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<outputDirectory>${project.parent.basedir}/target</outputDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

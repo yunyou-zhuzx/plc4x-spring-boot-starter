@@ -12,6 +12,7 @@ import com.yunyoucloud.plc4x.serializer.OpcuaSerializable;
 import com.yunyoucloud.plc4x.service.modbus.ModBusMaterial2;
 import com.yunyoucloud.plc4x.service.opcua.Material;
 import com.yunyoucloud.plc4x.service.opcua.Material22;
+import com.yunyoucloud.plc4x.service.s7.WarehouseSendDB;
 import lombok.SneakyThrows;
 import org.apache.plc4x.java.DefaultPlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
@@ -54,9 +55,19 @@ public class TestConnection {
 			.stream().filter(item -> item instanceof S7PlcConfig)
 			.forEach(s7config -> {
 				final PLC plc = PlcManager.getPlc(s7config.getConnections().get("plc1"));
+//				plc.write("%DB2000:4:STRING(20)", "TS-202609898989876659");
+//				final String read = plc.read("%DB2000:4:STRING(20)", String.class);
+//				System.out.println(read);
 				final IPLCSerializable iplcSerializable = IPLCSerializable.newInstance(plc);
-				final short i = iplcSerializable.readShort("DB2001.0");
-				System.out.println(i);
+				final WarehouseSendDB warehouseSendDB = new WarehouseSendDB();
+				warehouseSendDB.setMaterialName("电箱柜");
+				iplcSerializable.write(warehouseSendDB);
+				System.out.println(iplcSerializable.read(WarehouseSendDB.class));
+
+
+
+//				final short i = iplcSerializable.readShort("DB2001.0");
+//				System.out.println(i);
 //				final WarehouseReceiveDB read = iplcSerializable.read(WarehouseReceiveDB.class);
 //				System.out.println(read);
 			});

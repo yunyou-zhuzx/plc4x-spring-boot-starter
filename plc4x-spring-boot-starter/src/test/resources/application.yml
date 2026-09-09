@@ -5,14 +5,14 @@ plc:
       # 料库的 PLC 地址
       plc1:
         enable: true
-        ip: 10.31.128.73
+        ip: 192.168.10.73
         port: 102
         rack: 0
         slot: 1
         pduLength: 240
       # 板材出库（激光上料）小车的 PLC 地址
       plc2:
-        enable: true
+        enable: false
         ip: 192.168.11.81
         port: 102
         rack: 0
